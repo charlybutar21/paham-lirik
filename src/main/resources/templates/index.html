@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PahamLirik — AI-Powered Song Lyrics Translator & Analyzer</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        heading: ['Outfit', 'Inter', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/custom.css}">
+</head>
+<body class="flex flex-col min-h-screen bg-gray-950 text-gray-100 antialiased">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 z-50 flex-col items-center justify-center loading-overlay">
+        <div class="spinner-glow flex flex-col items-center">
+            <!-- Sleek SVG Spinner -->
+            <svg class="animate-spin h-16 w-16 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <h3 class="mt-8 text-xl font-bold tracking-tight text-white font-heading">Memproses Lirik</h3>
+            <p id="loadingStatusText" class="mt-2 text-indigo-400 font-medium text-center max-w-xs transition-all duration-300">Menghubungi AI...</p>
+        </div>
+    </div>
+
+    <!-- Header Fragment -->
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <!-- Main Content -->
+    <main class="flex-grow py-12 px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-3xl">
+            
+            <!-- Hero Header -->
+            <div class="text-center mb-10">
+                <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl font-heading text-white">
+                    Apa lagu yang sedang kamu <span class="text-gradient">dengarkan</span>?
+                </h1>
+                <p class="mt-3 text-lg text-gray-400 max-w-xl mx-auto">
+                    Masukkan lirik lagunya di bawah, biar kecerdasan buatan kami menerjemahkan dan mengupas makna tersembunyinya secara instan.
+                </p>
+            </div>
+
+            <!-- Flash Error Message -->
+            <div th:if="${errorMessage}" class="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400 flex items-center gap-3">
+                <svg class="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                </svg>
+                <span th:text="${errorMessage}">Pesan kesalahan terdeteksi</span>
+            </div>
+
+            <!-- Input Form Card -->
+            <div class="glass-card rounded-2xl p-6 sm:p-8 mb-12">
+                <form id="translateForm" th:action="@{/translate}" method="POST" class="space-y-6">
+                    <div>
+                        <label for="lyrics" class="block text-sm font-semibold text-gray-300 mb-2">Lirik Lagu Asing</label>
+                        <textarea id="lyrics" name="lyrics" rows="10" 
+                                  class="w-full rounded-xl bg-gray-900 border border-gray-800 text-gray-100 placeholder-gray-600 p-4 transition-all input-focus-glow"
+                                  placeholder="Contoh:&#10;When you try your best, but you don't succeed...&#10;Or paste your target lyrics here..."></textarea>
+                        <p id="lyricsError" class="mt-2 text-xs text-red-400 hidden">Validasi gagal</p>
+                    </div>
+
+                    <button id="submitBtn" type="submit" 
+                            class="relative w-full flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-3.5 text-base font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 hover:shadow-indigo-500/30 transition-all duration-200">
+                        <span id="submitSpinner" class="hidden mr-3">
+                            <!-- Spinner in button -->
+                            <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+                        <span id="submitText">Terjemahkan &amp; Analisis</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- History Section -->
+            <div class="space-y-6">
+                <div class="flex items-center justify-between border-b border-gray-900 pb-4">
+                    <h2 class="text-2xl font-bold tracking-tight text-white font-heading">Riwayat Terjemahan</h2>
+                    <span class="rounded-full bg-gray-900 border border-gray-800 px-3 py-1 text-xs text-gray-400 font-medium">Terbaru</span>
+                </div>
+
+                <div th:if="${#lists.isEmpty(recentTranslations)}" class="text-center py-12 glass-card rounded-2xl">
+                    <svg class="mx-auto h-12 w-12 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                    </svg>
+                    <p class="mt-4 text-sm text-gray-500">Belum ada riwayat terjemahan lirik.</p>
+                </div>
+
+                <div th:unless="${#lists.isEmpty(recentTranslations)}" class="relative border-l-2 border-gray-900 ml-5 pl-8 space-y-6">
+                    <div th:each="history : ${recentTranslations}" class="relative timeline-item">
+                        <a th:href="@{/translate/result/{id}(id=${history.id})}" 
+                           class="block glass-card glass-card-hover rounded-2xl p-5 hover:no-underline">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <h3 class="text-lg font-bold text-white leading-tight font-heading group-hover:text-indigo-400" th:text="${history.songTitle}">Judul Lagu</h3>
+                                    <p class="mt-1 text-sm text-gray-400" th:text="${history.artist}">Nama Artis</p>
+                                </div>
+                                <span class="rounded-md bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 text-xs font-semibold text-indigo-400 uppercase" 
+                                      th:text="${history.sourceLanguage}">EN</span>
+                            </div>
+                            <div class="mt-4 flex items-center justify-between text-xs text-gray-500">
+                                <span class="flex items-center gap-1.5">
+                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V12h4" />
+                                    </svg>
+                                    <span th:text="${history.formattedCreatedAt}">Tanggal</span>
+                                </span>
+                                <span class="text-gray-600 text-[10px]" th:text="${'via ' + history.aiProvider}">via gemini</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <!-- Client-side JS -->
+    <script th:src="@{/js/app.js}"></script>
+</body>
+</html>

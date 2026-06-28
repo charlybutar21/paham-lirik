@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terjadi Kesalahan — PahamLirik</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        heading: ['Outfit', 'Inter', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/custom.css}">
+</head>
+<body class="flex flex-col min-h-screen bg-gray-950 text-gray-100 antialiased">
+
+    <!-- Header Fragment -->
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <!-- Main Content -->
+    <main class="flex-grow py-20 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+        <div class="mx-auto max-w-md w-full text-center">
+            
+            <!-- Error Card -->
+            <div class="glass-card rounded-2xl p-8 sm:p-10 border border-red-500/20 shadow-2xl relative overflow-hidden">
+                <!-- Red top gradient highlight -->
+                <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 to-pink-500"></div>
+
+                <!-- Error Icon -->
+                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-500/10 border border-red-500/20 mb-6">
+                    <svg class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                    </svg>
+                </div>
+
+                <h1 class="text-2xl font-extrabold tracking-tight text-white mb-3 font-heading">
+                    Terjadi Kesalahan
+                </h1>
+                
+                <p class="text-sm text-gray-400 mb-8 leading-relaxed" 
+                   th:text="${errorMessage != null ? errorMessage : 'Permintaan Anda tidak dapat diproses saat ini. Silakan coba beberapa saat lagi.'}">
+                    Pesan kesalahan akan muncul di sini.
+                </p>
+
+                <!-- Back button -->
+                <a href="/" 
+                   class="w-full inline-flex items-center justify-center rounded-xl bg-gray-900 border border-gray-800 px-4 py-3 text-sm font-bold text-gray-200 hover:bg-gray-800 hover:text-white transition-colors duration-250">
+                    Kembali ke Beranda
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
